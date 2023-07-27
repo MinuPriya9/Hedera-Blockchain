@@ -28,7 +28,7 @@ client.setOperator(myAccountId, myPrivateKey);
 async function main() {
   let esealCompiled = require("../artifacts/contracts/HelloHedera.sol/HelloHedera.json");
   const bytecode = esealCompiled.bytecode;
-  // console.log(bytecode);
+  console.log(bytecode);
 
   //Create a file on Hedera and store the hex-encoded bytecode
   const fileCreateTx = new FileCreateTransaction()
