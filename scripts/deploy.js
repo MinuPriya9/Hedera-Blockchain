@@ -1,39 +1,35 @@
-console.clear();
 const {
-  AccountId,PrivateKey,
   Client,
   FileCreateTransaction,
   ContractCreateTransaction,
-  ContractExecuteTransaction,
+  PrivateKey,
+  ContractFunctionParameters,
   ContractCallQuery,
+  ContractExecuteTransaction,
   Hbar,
-  ContractFunctionParameters} = require("@hashgraph/sdk");
+} = require("@hashgraph/sdk");
 //require('dotenv').config({ path: '../.env' });
 
-const myAccountId = "0.0.14635326";
-const myPrivateKey = "3030020100300706052b8104000a04220420c6e263f385009c6a868fdf9c37e1f5a9110e4d07e147e468183f5b413ea2c917";
+const myAccountId = "0.0.99094";
+const myPrivateKey = "3030020100300706052b8104000a042204208e5eef735c8541a3b714b6d1204deb19a5df21f118ff750d689cd894b4d33f8a";
 
-// If we weren't able to grab it, we should throw a new error
-if (myAccountId == null ||
-  myPrivateKey == null ) {
-  throw new Error("Environment variables myAccountId and myPrivateKey must be present");
+if (!myAccountId || !myPrivateKey ) {
+  throw new Error("Environment variables MY_ACCOUNT_ID and MY_PRIVATE_KEY must be present");
 }
 
-// Create our connection to the Hedera network
-// The Hedera JS SDK makes this really easy!
-const client = Client.forTestnet();
 
+const client = Client.forTestnet();
 client.setOperator(myAccountId, myPrivateKey);
 
-async function main() {
-  let esealCompiled = require("../artifacts/contracts/HelloHedera.sol/HelloHedera.json");
-  const bytecode = esealCompiled.bytecode;
-  console.log(bytecode);
+async function deployContract() {
+  //Import the compiled contract from the HelloHedera.json file
+  let helloHedera = require("./HelloHedera.json");
+  const bytecode = helloHedera.data.bytecode.object;
 
   //Create a file on Hedera and store the hex-encoded bytecode
   const fileCreateTx = new FileCreateTransaction()
-      //Set the bytecode of the contract
-      .setContents(bytecode);
+    //Set the bytecode of the contract
+    .setContents(bytecode);
 
   //Submit the file to the Hedera test network signing with the transaction fee payer key specified with the client
   const submitTx = await fileCreateTx.execute(client);
@@ -45,30 +41,28 @@ async function main() {
   const bytecodeFileId = fileReceipt.fileId;
 
   //Log the file ID
-  console.log("The smart contract byte code file ID is " + bytecodeFileId)
+  console.log("The smart contract byte code file ID is " + bytecodeFileId);
 
   // Instantiate the contract instance
-  const contractTx = await new ContractCreateTransaction()
-      //Set the file ID of the Hedera file storing the bytecode
-      .setBytecodeFileId(bytecodeFileId)
-      //Set the gas to instantiate the contract
-      .setGas(100000)
-      //Provide the constructor parameters for the contract
-      .setConstructorParameters(new ContractFunctionParameters().addString("Hello from Hedera!"));
+const contractTx = await new ContractCreateTransaction()
+//Set the file ID of the Hedera file storing the bytecode
+.setBytecodeFileId(bytecodeFileId)
+//Set the gas to instantiate the contract
+.setGas(100000)
+//Provide the constructor parameters for the contract
+.setConstructorParameters(new ContractFunctionParameters().addString("Hello from Hedera!"));
 
-  //Submit the transaction to the Hedera test network
-  const contractResponse = await contractTx.execute(client);
+//Submit the transaction to the Hedera test network
+const contractResponse = await contractTx.execute(client);
 
-  //Get the receipt of the file create transaction
-  const contractReceipt = await contractResponse.getReceipt(client);
+//Get the receipt of the file create transaction
+const contractReceipt = await contractResponse.getReceipt(client);
 
-  //Get the smart contract ID
-  const newContractId = contractReceipt.contractId;
+//Get the smart contract ID
+const newContractId = contractReceipt.contractId;
 
-  //Log the smart contract ID
-  console.log("The smart contract ID is " + newContractId);
-
-  //process.exit();
+//Log the smart contract ID
+console.log("The smart contract ID is " + newContractId);
 
 // Calls a function of the smart contract
 const contractQuery = await new ContractCallQuery()
@@ -92,6 +86,7 @@ const message = getMessage.getString(0);
 console.log("The contract message: " + message);
 
 //v2 Hedera JavaScript SDK
+
  //Create the transaction to update the contract message
  const contractExecTx = await new ContractExecuteTransaction()
  //Set the ID of the contract
@@ -130,10 +125,13 @@ const message2 = contractUpdateResult.getString(0);
 
 //Log the updated message to the console
 console.log("The updated contract message: " + message2);
-process.exit();
-
-}
 
 //v2 Hedera JavaScript SDK
+process.exit();
 
-main();
+//v2 JavaScript SDK
+}
+deployContract();
+
+//The smart contract byte code file ID is 0.0.99589
+//The smart contract ID is 0.0.99592
