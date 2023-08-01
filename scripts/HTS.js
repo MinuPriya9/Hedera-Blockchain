@@ -1,4 +1,4 @@
-require("dotenv").config();
+//require("dotenv").config({path: './.env'});
 
 const {
     Client,
@@ -16,25 +16,22 @@ const {
     AccountBalanceQuery
 } = require("@hashgraph/sdk");
 
-// Import the compiled contract
-const htsContract = require("./HTS.json");
+//Grab your Hedera testnet account ID and private key from your .env file
+const accountIdTest = "0.0.99094";
+const accountKeyTest = "3030020100300706052b8104000a042204208e5eef735c8541a3b714b6d1204deb19a5df21f118ff750d689cd894b4d33f8a";
+
+ // If we weren't able to grab it, we should throw a new error
+ if (accountIdTest == null ||
+    accountKeyTest == null ) {
+    throw new Error("Environment variables myAccountId and myPrivateKey must be present");
+}
+
+const client = Client.forPreviewnet();
+client.setOperator(accountIdTest, accountKeyTest);
 
 async function deployhtsContract() {
-    //Grab your Hedera testnet account ID and private key from your .env file
-    const accountIdTest = "0.0.14635326";
-    const accountKeyTest = "3030020100300706052b8104000a04220420c6e263f385009c6a868fdf9c37e1f5a9110e4d07e147e468183f5b413ea2c917";
-
-   
-    // If we weren't able to grab it, we should throw a new error
-    if (accountIdTest == null ||
-        accountKeyTest == null ) {
-        throw new Error("Environment variables myAccountId and myPrivateKey must be present");
-    }
- 
-
-    const client = Client.forPreviewnet();
-    client.setOperator(accountIdTest, accountKeyTest);
-
+    // Import the compiled contract
+const htsContract = require("./HTS.json");
    //Get the contract bytecode
     const bytecode = htsContract.data.bytecode.object;
 
@@ -195,4 +192,4 @@ async function deployhtsContract() {
 
 }
 
-void deployhtsContract();
+deployhtsContract();
