@@ -26,7 +26,7 @@ const accountKeyTest = "3030020100300706052b8104000a042204208e5eef735c8541a3b714
     throw new Error("Environment variables myAccountId and myPrivateKey must be present");
 }
 
-const client = Client.forPreviewnet();
+const client = Client.forTestnet();
 client.setOperator(accountIdTest, accountKeyTest);
 
 async function deployhtsContract() {

@@ -4,6 +4,9 @@ const {
   ContractCreateTransaction,
   PrivateKey,
   AccountCreateTransaction,
+  contractId,
+  gasLimit,
+  ContractExecuteTransaction,
   AccountId,
   Hbar,
 } = require("@hashgraph/sdk");
@@ -37,7 +40,10 @@ async function main() {
     `- Created Alice's account ${aliceId} that has a balance of ${initBalance} ℏ`
   );
 
-  // Import the compiled contract bytecode
+}
+async function deploy(){
+
+   // Import the compiled contract bytecode
   const contractBytecode = fs.readFileSync("hbarToAndFromContract.bin");
 
   // Deploy the smart contract on Hedera
@@ -53,8 +59,8 @@ async function main() {
     `- The smart contract ID in Solidity format is: ${contractAddress}`
   );
 
-  const tokenId = AccountId.fromString("0.0.47931765");
-  console.log(`\n- Token ID (for association with contract later): ${tokenId}`);
+  // const tokenId = AccountId.fromString("0.0.47931765");
+  // console.log(`\n- Token ID (for association with contract later): ${tokenId}`);
 
 }
 
@@ -79,4 +85,55 @@ async function contractDeployFcn(bytecode, gasLim) {
   return [contractId, contractAddress];
 }
 
-main();
+async function transfer(){
+console.log(`
+====================================================
+GETTING HBAR TO THE CONTRACT
+====================================================`);
+
+	// Transfer HBAR to the contract using .setPayableAmount WITHOUT specifying a function (fallback/receive triggered)
+	let payableAmt = 10;
+	console.log(`- Caller (Operator) PAYS ${payableAmt} ℏ to contract (fallback/receive)...`);
+	const toContractRx = await contractExecuteNoFcn(contractId, gasLimit, payableAmt);
+
+	// Get contract HBAR balance by calling the getBalance function in the contract AND/OR using ContractInfoQuery in the SDK
+	await contractCallQueryFcn(contractId, gasLimit, "getBalance"); // Outputs the contract balance in the console
+}
+async function contractExecuteNoFcn(cId, gasLim, amountHbar) {
+  const contractExecuteTx = new ContractExecuteTransaction()
+      .setContractId(cId)
+      .setGas(gasLim)
+      .setPayableAmount(amountHbar);
+  const contractExecuteSubmit = await contractExecuteTx.execute(client);
+  const contractExecuteRx = await contractExecuteSubmit.getReceipt(client);
+  return contractExecuteRx;
+}
+async function contractCallQueryFcn(cId, gasLim, fcnName) {
+  const contractQueryTx = new ContractCallQuery()
+      .setContractId(cId)
+      .setGas(gasLim)
+      .setFunction(fcnName);
+  const contractQuerySubmit = await contractQueryTx.execute(client);
+  const contractQueryResult = contractQuerySubmit.getUint256(0);
+  console.log(`- Contract balance (getBalance fcn): ${contractQueryResult * 1e-8} ℏ`);
+}
+
+//main();
+//deploy();
+//transfer();
+// First, deploy the contract to get the contractId
+deploy()
+  .then(() => {
+    // After deployment, call the transfer function
+    transfer()
+      .then(() => {
+        console.log("Transfer completed successfully.");
+      })
+      .catch((error) => {
+        console.error("Error during transfer:", error);
+      });
+  })
+  .catch((error) => {
+    console.error("Error during deployment:", error);
+  });
+
