@@ -109,7 +109,9 @@ const htsContract = require("./HTS.json");
 
     //Log the smart contract ID
     console.log("The smart contract ID is " + newContractId);
+}
 
+     async function associate(){
     //Associate the token to an account using the HTS contract
     const associateToken = new ContractExecuteTransaction()
         //The contract to call
